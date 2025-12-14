@@ -7,7 +7,6 @@ export function Modal({ isOpen, onClose, onSubmit }) {
     const getInitialFormData = () => ({
         skillName: "",
         description: "",
-        cost: "1",
         category: "movement",
     });
 
@@ -99,25 +98,6 @@ export function Modal({ isOpen, onClose, onSubmit }) {
                                 }
                                 placeholder="Enter skill description..."
                                 rows={3}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="cost">
-                                Skill Point Cost
-                                <span className="required">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                id="cost"
-                                name="cost"
-                                value={formData.cost}
-                                onChange={(e) =>
-                                    handleInputChange("cost", e.target.value)
-                                }
-                                min={1}
-                                max={10}
-                                required
                             />
                         </div>
 

@@ -3,16 +3,24 @@ import { Position, Handle } from "@xyflow/react";
 export function SkillNode(props) {
     const { data } = props;
 
+    const handleClick = () => {
+        if (data.locked) return; // Don't allow clicks on locked nodes
+        data.handleSkillNodeClick(props.id);
+    };
+
     return (
         <div
             className={`skill-node nodrag${
                 data.selected ? " selected-skill-node" : ""
-            }`}
-            onClick={() => data.handleSkillNodeClick(props.id)}
+            }${data.locked ? " locked-skill-node" : ""}`}
+            onClick={handleClick}
+            style={{
+                opacity: data.locked ? 0.4 : 1,
+                cursor: data.locked ? "not-allowed" : "pointer",
+            }}
         >
             <div className="skill-header">
                 <h3 className="skill-title">{data.label}</h3>
-                <div className="skill-cost">{data.cost} SP</div>
             </div>
 
             {data.description && (
