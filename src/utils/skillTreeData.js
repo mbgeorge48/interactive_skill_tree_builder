@@ -117,28 +117,38 @@ export const getLocalStorageSkillTree = (
     selectedNodes,
   );
 
-  // Use stored data if it exists, otherwise use defaults
-  let localStorageNodes = defaultNodes;
-  let localStorageEdges = defaultEdges;
-  let localStorageSelectedNodes = [];
+  // Use stored data if it exists and is valid, otherwise use defaults
+  let finalNodes = defaultNodes;
+  let finalEdges = defaultEdges;
+  let finalSelectedNodes = [];
 
   try {
-    if (storedSelectedNodes) {
-      localStorageSelectedNodes = JSON.parse(storedSelectedNodes);
+    if (storedSelectedNodes && storedSelectedNodes !== "null") {
+      const parsed = JSON.parse(storedSelectedNodes);
+      if (Array.isArray(parsed)) {
+        finalSelectedNodes = parsed;
+      }
     }
-    if (storedEdges) {
-      localStorageEdges = JSON.parse(storedEdges);
+    if (storedEdges && storedEdges !== "null") {
+      const parsed = JSON.parse(storedEdges);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        finalEdges = parsed;
+      }
     }
-    if (storedNodes) {
-      localStorageNodes = JSON.parse(storedNodes);
+    if (storedNodes && storedNodes !== "null") {
+      const parsed = JSON.parse(storedNodes);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        finalNodes = parsed;
+      }
     }
   } catch (error) {
     console.warn("Error loading from localStorage:", error);
+    // Use defaults if anything fails
   }
 
   return {
-    nodes: localStorageNodes,
-    edges: localStorageEdges,
-    selectedNodes: localStorageSelectedNodes,
+    nodes: finalNodes,
+    edges: finalEdges,
+    selectedNodes: finalSelectedNodes,
   };
 };

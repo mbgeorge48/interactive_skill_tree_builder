@@ -235,10 +235,13 @@ describe("skillTreeData", () => {
       const storedEdges = [
         { id: "edge-1", source: "node-1", target: "node-2" },
       ];
+      const storedSelectedNodes = ["node-1"];
 
       localStorage.getItem.mockImplementation((key) => {
         if (key === "skillTreeNodes") return JSON.stringify(storedNodes);
         if (key === "skillTreeEdges") return JSON.stringify(storedEdges);
+        if (key === "skillTreeSelectedNodes")
+          return JSON.stringify(storedSelectedNodes);
         return null;
       });
 
@@ -246,6 +249,7 @@ describe("skillTreeData", () => {
 
       expect(result.nodes).toEqual(storedNodes);
       expect(result.edges).toEqual(storedEdges);
+      expect(result.selectedNodes).toEqual(storedSelectedNodes);
     });
 
     it("should return default data when localStorage is empty", () => {
@@ -256,6 +260,7 @@ describe("skillTreeData", () => {
       // Should match the default generated tree
       expect(result.nodes).toHaveLength(6);
       expect(result.edges).toHaveLength(5);
+      expect(result.selectedNodes).toEqual([]);
       expect(result.nodes.find((n) => n.type === "startingNode")).toBeDefined();
     });
 
@@ -266,6 +271,7 @@ describe("skillTreeData", () => {
 
       expect(result.nodes).toHaveLength(6);
       expect(result.edges).toHaveLength(5);
+      expect(result.selectedNodes).toEqual([]);
     });
 
     it("should return default data when stored data is empty array", () => {
@@ -279,6 +285,7 @@ describe("skillTreeData", () => {
 
       expect(result.nodes).toHaveLength(6);
       expect(result.edges).toHaveLength(5);
+      expect(result.selectedNodes).toEqual([]);
     });
 
     it("should return default data when stored data is not an array", () => {
@@ -293,6 +300,7 @@ describe("skillTreeData", () => {
 
       expect(result.nodes).toHaveLength(6);
       expect(result.edges).toHaveLength(5);
+      expect(result.selectedNodes).toEqual([]);
     });
 
     it("should handle mix of valid and invalid stored data", () => {
@@ -311,6 +319,7 @@ describe("skillTreeData", () => {
       // Should use valid nodes but default edges
       expect(result.nodes).toEqual(validNodes);
       expect(result.edges).toHaveLength(5); // Default edges
+      expect(result.selectedNodes).toEqual([]);
     });
 
     it("should pass selectedNodes to generateInitialSkillTree for defaults", () => {
@@ -345,6 +354,7 @@ describe("skillTreeData", () => {
       // Should fall back to defaults when JSON parsing fails
       expect(result.nodes).toHaveLength(6);
       expect(result.edges).toHaveLength(5);
+      expect(result.selectedNodes).toEqual([]);
     });
   });
 });
