@@ -136,8 +136,6 @@ export function Modal({ isOpen, onClose, onSubmit }) {
                             >
                                 <option value="movement">Movement</option>
                                 <option value="combat">Combat</option>
-                                <option value="utility">Utility</option>
-                                <option value="passive">Passive</option>
                             </select>
                         </div>
                     </div>

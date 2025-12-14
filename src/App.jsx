@@ -12,65 +12,9 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-import { TextUpdaterNode } from "./components/TextUpdaterNode.jsx";
 import { SkillNode } from "./components/SkillNode.jsx";
+import { StartingNode } from "./components/StartingNode.jsx";
 import { Modal } from "./components/Modal.jsx";
-
-// const initialNodes = [
-//     {
-//         id: "n1",
-//         type: "skillNode",
-//         position: { x: 0, y: 0 },
-//         data: { label: "Node 1" },
-//     },
-//     {
-//         id: "n2",
-//         type: "skillNode",
-//         position: { x: 0, y: 100 },
-//         data: { label: "Node 2", completed: true },
-//     },
-// ];
-// const initialEdges = [
-//     {
-//         id: "n1-n2",
-//         source: "n1",
-//         target: "n2",
-//         type: "step",
-//     },
-// ];
-
-const initialNodes = [
-    {
-        id: "node-1",
-        type: "skillNode",
-        position: { x: 325, y: 350 },
-        data: { label: "Double Jump" },
-    },
-    {
-        id: "node-2",
-        type: "skillNode",
-        position: { x: 200, y: 200 },
-        data: { label: "Wall Run" },
-    },
-    {
-        id: "node-3",
-        type: "skillNode",
-        position: { x: 450, y: 200 },
-        data: { label: "Air Dash" },
-    },
-    {
-        id: "node-4",
-        type: "skillNode",
-        position: { x: 125, y: 50 },
-        data: { label: "Grapple Hook" },
-    },
-    {
-        id: "node-5",
-        type: "skillNode",
-        position: { x: 525, y: 50 },
-        data: { label: "Ground Slam" },
-    },
-];
 
 const initialEdges = [
     // { id: "edge-1", source: "node-1", target: "node-2" },
@@ -78,16 +22,140 @@ const initialEdges = [
 ];
 
 function FlowContent() {
-    const [edges, setEdges] = useState(initialEdges);
-    const reactFlowInstance = useReactFlow();
-    const [skillPoints, setSkillPoints] = useState(8);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [edges, setEdges] = useState(initialEdges);
+    const [selectedNodes, setSelectedNodes] = useState([]);
+    const [skillPoints, setSkillPoints] = useState(8);
 
-    let nodeId = initialNodes.length;
+    const reactFlowInstance = useReactFlow();
+
+    const handleSkillNodeClick = useCallback(
+        (nodeId) => {
+            setSelectedNodes((prev) => {
+                const isSelected = prev.includes(nodeId);
+                const newSelection = isSelected
+                    ? prev.filter((id) => id !== nodeId)
+                    : [...prev, nodeId];
+
+                const nodes = reactFlowInstance.getNodes();
+                const updatedNodes = nodes.map((node) => {
+                    if (node.id === nodeId) {
+                        return {
+                            ...node,
+                            data: {
+                                ...node.data,
+                                selected: !isSelected,
+                            },
+                        };
+                    }
+                    return node;
+                });
+                reactFlowInstance.setNodes(updatedNodes);
+
+                return newSelection;
+            });
+        },
+        [reactFlowInstance]
+    );
+
+    const initialNodes = [
+        {
+            id: "node",
+            type: "startingNode",
+            position: { x: 450, y: 0 },
+            data: {},
+        },
+        {
+            id: "node-1",
+            type: "skillNode",
+            position: { x: 250, y: 100 },
+            data: {
+                label: "Air Dash",
+                cost: 1,
+                description:
+                    "Allows the player to dash in any direction while airborne.",
+                category: "movement",
+                handleSkillNodeClick: handleSkillNodeClick,
+                selected: selectedNodes.includes("node-1"),
+            },
+        },
+        {
+            id: "node-2",
+            type: "skillNode",
+            position: { x: 250, y: 300 },
+            data: {
+                label: "Wall Run",
+                cost: 1,
+                description:
+                    "Enables the player to run along vertical surfaces for a short duration.",
+                category: "movement",
+                handleSkillNodeClick: handleSkillNodeClick,
+                selected: selectedNodes.includes("node-2"),
+            },
+        },
+        {
+            id: "node-3",
+            type: "skillNode",
+            position: { x: 250, y: 500 },
+            data: {
+                label: "Blink Step",
+                cost: 2,
+                description:
+                    "Instantly teleports the player a short distance in the direction of movement.",
+                category: "movement",
+                handleSkillNodeClick: handleSkillNodeClick,
+                selected: selectedNodes.includes("node-3"),
+            },
+        },
+        {
+            id: "node-4",
+            type: "skillNode",
+            position: { x: 650, y: 100 },
+            data: {
+                label: "Launcher Attack",
+                cost: 1,
+                description:
+                    "A powerful attack that launches enemies into the air.",
+                category: "combat",
+                handleSkillNodeClick: handleSkillNodeClick,
+                selected: selectedNodes.includes("node-4"),
+            },
+        },
+        {
+            id: "node-5",
+            type: "skillNode",
+            position: { x: 650, y: 300 },
+            data: {
+                label: "Parry Strike",
+                cost: 2,
+                description:
+                    "A perfectly timed block that stuns enemies and opens them to counterattacks.",
+                category: "combat",
+                handleSkillNodeClick: handleSkillNodeClick,
+                selected: selectedNodes.includes("node-5"),
+            },
+        },
+        {
+            id: "node-6",
+            type: "skillNode",
+            position: { x: 650, y: 500 },
+            data: {
+                label: "Ground Slam",
+                cost: 1,
+                description:
+                    "Slams the ground from the air, dealing damage to nearby enemies.",
+                category: "combat",
+                handleSkillNodeClick: handleSkillNodeClick,
+                selected: selectedNodes.includes("node-6"),
+            },
+        },
+    ];
+
     const handleAddSkillClick = useCallback(() => {
         setIsModalOpen(true);
     }, []);
 
+    let nodeId = initialNodes.length;
     const handleAddSkill = (formData) => {
         const id = `node-${++nodeId}`;
         const newNode = {
@@ -98,10 +166,11 @@ function FlowContent() {
                 y: Math.random() * 500,
             },
             data: {
-                label: formData.skillName || `Skill ${nodeId}`,
-                description: formData.description || "",
-                cost: parseInt(formData.cost) || 1,
-                category: formData.category || "general",
+                label: formData.skillName,
+                description: formData.description,
+                cost: parseInt(formData.cost),
+                category: formData.category,
+                handleSkillNodeClick: handleSkillNodeClick,
             },
         };
         reactFlowInstance.addNodes(newNode);
@@ -115,6 +184,7 @@ function FlowContent() {
 
     const nodeTypes = {
         skillNode: SkillNode,
+        startingNode: StartingNode,
     };
 
     return (
