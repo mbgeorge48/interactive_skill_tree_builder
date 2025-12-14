@@ -3,14 +3,14 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { Modal } from "./Modal";
 
 // Mock dialog element methods for testing environment
-Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
   value: vi.fn(),
-  writable: true
+  writable: true,
 });
 
-Object.defineProperty(HTMLDialogElement.prototype, 'close', {
+Object.defineProperty(HTMLDialogElement.prototype, "close", {
   value: vi.fn(),
-  writable: true
+  writable: true,
 });
 
 describe("Modal", () => {
