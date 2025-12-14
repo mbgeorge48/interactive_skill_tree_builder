@@ -1,0 +1,96 @@
+.starting-node {
+    width: 180px;
+    background-color: #059669;
+    border-color: #047857;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.3), 0 4px 8px rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    padding: 12px;
+    color: white;
+    cursor: pointer;
+    text-align: center;
+}
+
+.skill-node {
+    width: 180px;
+    min-height: 120px;
+    border-radius: 12px;
+    background-color: #4f46e5;
+    border: 2px solid #312e81;
+    padding: 12px;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s,
+        border-color 0.2s;
+}
+
+.skill-node.selected-skill-node {
+    background-color: #059669;
+    border-color: #047857;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.3), 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: scale(1.05);
+}
+
+.skill-node.selected-skill-node:hover {
+    background-color: #047857;
+    transform: scale(1.05) translateY(-2px);
+}
+
+.skill-node:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.skill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
+}
+
+.skill-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin: 0;
+    line-height: 1.2;
+    flex: 1;
+}
+
+.skill-description {
+    font-size: 11px;
+    line-height: 1.3;
+    opacity: 0.9;
+    flex: 1;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.skill-category {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+    font-weight: 500;
+    padding: 2px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+}
+
+.skill-node.locked-skill-node {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(70%);
+    border: 2px dashed #666;
+    background-color: #6b7280;
+}
+
+.skill-node.locked-skill-node:hover {
+    transform: none; /* Disable hover effects for locked nodes */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    background-color: #6b7280;
+}

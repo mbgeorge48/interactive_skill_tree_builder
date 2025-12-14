@@ -1,4 +1,5 @@
 import { Position, Handle } from "@xyflow/react";
+import "./Node.css";
 
 export function StartingNode() {
     return (

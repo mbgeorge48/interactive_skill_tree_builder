@@ -17,6 +17,8 @@ import {
     updateNodeSelection,
     updateNodeVisualState,
 } from "./utils/skillTreeUtils.js";
+import { generateInitialSkillTree } from "./utils/skillTreeData.js";
+import "./App.css";
 
 function FlowContent() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,9 +26,7 @@ function FlowContent() {
 
     const reactFlowInstance = useReactFlow();
 
-    // Helper function to check if a node can be selected
     const canNodeBeSelected = useCallback((nodeId, selectedNodes, edges) => {
-        // Starting node can always be selected (but doesn't need to be clicked)
         if (nodeId === "node") return true;
 
         // Find edges that target this node (prerequisites)
@@ -34,9 +34,7 @@ function FlowContent() {
             (edge) => edge.target === nodeId
         );
 
-        // If no prerequisites, node can be selected
         if (prerequisiteEdges.length === 0) return true;
-
         // All prerequisite nodes must be selected, but treat starting node as always selected
         return prerequisiteEdges.every(
             (edge) =>
@@ -50,7 +48,6 @@ function FlowContent() {
                 const nodes = reactFlowInstance.getNodes();
                 const edges = reactFlowInstance.getEdges();
 
-                // Check if node can be selected (prerequisites met)
                 const canSelect = canNodeBeSelected(
                     nodeId,
                     currentSelected,
@@ -58,7 +55,7 @@ function FlowContent() {
                 );
 
                 if (!canSelect) {
-                    return currentSelected; // Don't allow selection
+                    return currentSelected;
                 }
 
                 const isSelected = isNodeSelected(nodeId, currentSelected);
@@ -75,92 +72,9 @@ function FlowContent() {
         [reactFlowInstance, canNodeBeSelected]
     );
 
-    const initialNodes = [
-        {
-            id: "node",
-            type: "startingNode",
-            position: { x: 450, y: 0 },
-            data: {},
-        },
-        {
-            id: "node-1",
-            type: "skillNode",
-            position: { x: 250, y: 100 },
-            data: {
-                label: "Double Jump",
-                description:
-                    "Allows the player to dash in any direction while airborne.",
-                category: "movement",
-                handleSkillNodeClick: handleSkillNodeClick,
-                selected: selectedNodes.includes("node-1"),
-                locked: false,
-            },
-        },
-        {
-            id: "node-5",
-            type: "skillNode",
-            position: { x: -50, y: 300 },
-            data: {
-                label: "Safe Landing",
-                description:
-                    "Reduces fall damage and allows for a quick recovery upon landing.",
-                category: "movement",
-                handleSkillNodeClick: handleSkillNodeClick,
-                selected: selectedNodes.includes("node-5"),
-                locked: true,
-            },
-        },
-        {
-            id: "node-2",
-            type: "skillNode",
-            position: { x: 250, y: 300 },
-            data: {
-                label: "Wall Run",
-                description:
-                    "Enables the player to run along vertical surfaces for a short duration.",
-                category: "movement",
-                handleSkillNodeClick: handleSkillNodeClick,
-                selected: selectedNodes.includes("node-2"),
-                locked: true,
-            },
-        },
-        {
-            id: "node-3",
-            type: "skillNode",
-            position: { x: 650, y: 100 },
-            data: {
-                label: "Heavy Attack",
-                description:
-                    "A powerful attack that launches enemies into the air.",
-                category: "combat",
-                handleSkillNodeClick: handleSkillNodeClick,
-                selected: selectedNodes.includes("node-3"),
-                locked: false,
-            },
-        },
-        {
-            id: "node-4",
-            type: "skillNode",
-            position: { x: 650, y: 300 },
-            data: {
-                label: "Parry Strike",
-                description:
-                    "A perfectly timed block that stuns enemies and opens them to counterattacks.",
-                category: "combat",
-                handleSkillNodeClick: handleSkillNodeClick,
-                selected: selectedNodes.includes("node-4"),
-                locked: true,
-            },
-        },
-    ];
-
-    const initialEdges = [
-        { id: "edge-1", source: "node", target: "node-1" },
-        { id: "edge-2", source: "node", target: "node-3" },
-        { id: "edge-3", source: "node-1", target: "node-5" },
-        { id: "edge-4", source: "node-1", target: "node-2" },
-        { id: "edge-5", source: "node-3", target: "node-4" },
-    ];
+    // Generate initial skill tree data
+    const { nodes: initialNodes, edges: initialEdges } =
+        generateInitialSkillTree(handleSkillNodeClick, selectedNodes);
 
     // Update nodes with locked state when selectedNodes changes
     const updateNodesWithLockState = useCallback(() => {
@@ -190,10 +104,11 @@ function FlowContent() {
         setIsModalOpen(true);
     }, []);
 
-    let nodeId = initialNodes.length;
     const handleAddSkill = (formData) => {
-        const id = `node-${++nodeId}`;
+        const nodes = reactFlowInstance.getNodes();
         const edges = reactFlowInstance.getEdges();
+        const id = `node-${nodes.length + 1}`;
+
         const newNode = {
             id,
             type: "skillNode",
@@ -207,13 +122,22 @@ function FlowContent() {
                 category: formData.category,
                 handleSkillNodeClick: handleSkillNodeClick,
                 selected: false,
-                locked: !canNodeBeSelected(id, selectedNodes, edges),
             },
         };
+
         reactFlowInstance.addNodes(newNode);
 
-        // Update lock states after adding new node
-        setTimeout(() => updateNodesWithLockState(), 0);
+        if (formData.prerequisite && formData.prerequisite !== "") {
+            const newEdge = {
+                id: `edge-${edges.length + 1}`,
+                source: formData.prerequisite,
+                target: id,
+            };
+            reactFlowInstance.addEdges(newEdge);
+        }
+
+        // Update lock states after adding new node and edge
+        setTimeout(() => updateNodesWithLockState(), 50);
     };
 
     const nodeTypes = {
@@ -226,7 +150,6 @@ function FlowContent() {
             defaultNodes={initialNodes}
             defaultEdges={initialEdges}
             nodeTypes={nodeTypes}
-            // onConnect={onConnect}
             fitView
         >
             <Panel position="top-left">
@@ -244,6 +167,7 @@ function FlowContent() {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSubmit={handleAddSkill}
+                existingNodes={reactFlowInstance.getNodes()}
             />
         </ReactFlow>
     );
@@ -259,7 +183,7 @@ export default function App() {
     );
 }
 
-// Lock nodes
-// add new nodes at specific positions
 // local storage saving/loading
-// add branching
+// tests
+// readme
+// linting

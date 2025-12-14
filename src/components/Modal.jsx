@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import "./Modal.css";
 
-export function Modal({ isOpen, onClose, onSubmit }) {
+export function Modal({ isOpen, onClose, onSubmit, existingNodes }) {
     const dialogRef = useRef(null);
 
     const getInitialFormData = () => ({
         skillName: "",
         description: "",
         category: "movement",
+        prerequisite: "",
     });
 
     const [formData, setFormData] = useState(getInitialFormData);
@@ -116,6 +117,27 @@ export function Modal({ isOpen, onClose, onSubmit }) {
                             >
                                 <option value="movement">Movement</option>
                                 <option value="combat">Combat</option>
+                            </select>
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="prerequisite">Prerequisite</label>
+                            <select
+                                id="prerequisite"
+                                name="prerequisite"
+                                value={formData.prerequisite}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        "prerequisite",
+                                        e.target.value
+                                    )
+                                }
+                            >
+                                {existingNodes?.map((node) => (
+                                    <option key={node.id} value={node.id}>
+                                        {node.data.label}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                     </div>
