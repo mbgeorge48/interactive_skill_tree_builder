@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect } from "react";
 import {
-    ReactFlow,
-    Background,
-    Controls,
-    Panel,
-    ReactFlowProvider,
-    useReactFlow,
+  ReactFlow,
+  Background,
+  Controls,
+  Panel,
+  ReactFlowProvider,
+  applyNodeChanges,
+  applyEdgeChanges,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
@@ -13,177 +14,225 @@ import { SkillNode } from "./components/SkillNode.jsx";
 import { StartingNode } from "./components/StartingNode.jsx";
 import { Modal } from "./components/Modal.jsx";
 import {
-    isNodeSelected,
-    updateNodeSelection,
-    updateNodeVisualState,
+  isNodeSelected,
+  updateNodeSelection,
+  updateNodeVisualState,
 } from "./utils/skillTreeUtils.js";
-import { generateInitialSkillTree } from "./utils/skillTreeData.js";
+import {
+  setLocalStorageSkillTree,
+  generateInitialSkillTree,
+  getLocalStorageSkillTree,
+} from "./utils/skillTreeData.js";
 import "./App.css";
 
 function FlowContent() {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedNodes, setSelectedNodes] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedNodes, setSelectedNodes] = useState([]);
+  const [nodes, setNodes] = useState([]);
+  const [edges, setEdges] = useState([]);
 
-    const reactFlowInstance = useReactFlow();
+  const canNodeBeSelected = useCallback((nodeId, selectedNodes, edges) => {
+    if (nodeId === "node") return true;
 
-    const canNodeBeSelected = useCallback((nodeId, selectedNodes, edges) => {
-        if (nodeId === "node") return true;
+    // Find edges that target this node (prerequisites)
+    const prerequisiteEdges = edges.filter((edge) => edge.target === nodeId);
 
-        // Find edges that target this node (prerequisites)
-        const prerequisiteEdges = edges.filter(
-            (edge) => edge.target === nodeId
-        );
+    if (prerequisiteEdges.length === 0) return true;
+    // All prerequisite nodes must be selected, but treat starting node as always selected
+    return prerequisiteEdges.every(
+      (edge) => edge.source === "node" || selectedNodes.includes(edge.source),
+    );
+  }, []);
 
-        if (prerequisiteEdges.length === 0) return true;
-        // All prerequisite nodes must be selected, but treat starting node as always selected
-        return prerequisiteEdges.every(
-            (edge) =>
-                edge.source === "node" || selectedNodes.includes(edge.source)
-        );
-    }, []);
+  const handleSkillNodeClick = useCallback(
+    (nodeId) => {
+      setSelectedNodes((currentSelected) => {
+        setNodes((currentNodes) => {
+          setEdges((currentEdges) => {
+            const canSelect = canNodeBeSelected(
+              nodeId,
+              currentSelected,
+              currentEdges,
+            );
 
-    const handleSkillNodeClick = useCallback(
-        (nodeId) => {
-            setSelectedNodes((currentSelected) => {
-                const nodes = reactFlowInstance.getNodes();
-                const edges = reactFlowInstance.getEdges();
+            if (!canSelect) {
+              return currentEdges;
+            }
 
-                const canSelect = canNodeBeSelected(
-                    nodeId,
-                    currentSelected,
-                    edges
-                );
+            const isSelected = isNodeSelected(nodeId, currentSelected);
+            const updatedNodes = updateNodeVisualState(
+              nodeId,
+              currentNodes,
+              !isSelected,
+            );
 
-                if (!canSelect) {
-                    return currentSelected;
-                }
+            setNodes(updatedNodes);
+            return currentEdges;
+          });
+          return currentNodes;
+        });
 
-                const isSelected = isNodeSelected(nodeId, currentSelected);
-                const updatedNodes = updateNodeVisualState(
-                    nodeId,
-                    nodes,
-                    !isSelected
-                );
-                reactFlowInstance.setNodes(updatedNodes);
+        return updateNodeSelection(nodeId, currentSelected);
+      });
+    },
+    [canNodeBeSelected],
+  );
 
-                return updateNodeSelection(nodeId, currentSelected);
-            });
+  // Update lock states whenever selectedNodes changes
+  useEffect(() => {
+    setNodes((currentNodes) => {
+      if (currentNodes.length === 0) return currentNodes;
+
+      return currentNodes.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          selected: selectedNodes.includes(node.id),
+          locked: !canNodeBeSelected(node.id, selectedNodes, edges),
         },
-        [reactFlowInstance, canNodeBeSelected]
+      }));
+    });
+  }, [selectedNodes, edges, canNodeBeSelected]);
+
+  // Save to localStorage when nodes, edges, or selectedNodes change
+  useEffect(() => {
+    if (nodes.length > 0) {
+      const timeoutId = setTimeout(() => {
+        setLocalStorageSkillTree(nodes, edges, selectedNodes);
+      }, 1000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [nodes, edges, selectedNodes]);
+
+  const handleResetInitialSkills = useCallback(() => {
+    const { nodes: newNodes, edges: newEdges } = generateInitialSkillTree(
+      handleSkillNodeClick,
+      [], // Pass empty array since we're resetting to initial state
     );
+    setNodes(newNodes);
+    setEdges(newEdges);
+    setSelectedNodes([]); // Clear selected nodes when resetting
+  }, [handleSkillNodeClick]);
+  const handleAddSkillClick = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
 
-    // Generate initial skill tree data
-    const { nodes: initialNodes, edges: initialEdges } =
-        generateInitialSkillTree(handleSkillNodeClick, selectedNodes);
+  const handleAddSkill = (formData) => {
+    const id = `node-${nodes.length + 1}`;
 
-    // Update nodes with locked state when selectedNodes changes
-    const updateNodesWithLockState = useCallback(() => {
-        const nodes = reactFlowInstance.getNodes();
-        const edges = reactFlowInstance.getEdges();
-
-        if (nodes.length === 0) return;
-
-        const updatedNodes = nodes.map((node) => ({
-            ...node,
-            data: {
-                ...node.data,
-                selected: selectedNodes.includes(node.id),
-                locked: !canNodeBeSelected(node.id, selectedNodes, edges),
-            },
-        }));
-
-        reactFlowInstance.setNodes(updatedNodes);
-    }, [reactFlowInstance, selectedNodes, canNodeBeSelected]);
-
-    // Update lock states whenever selectedNodes changes
-    useEffect(() => {
-        updateNodesWithLockState();
-    }, [selectedNodes, updateNodesWithLockState]);
-
-    const handleAddSkillClick = useCallback(() => {
-        setIsModalOpen(true);
-    }, []);
-
-    const handleAddSkill = (formData) => {
-        const nodes = reactFlowInstance.getNodes();
-        const edges = reactFlowInstance.getEdges();
-        const id = `node-${nodes.length + 1}`;
-
-        const newNode = {
-            id,
-            type: "skillNode",
-            position: {
-                x: Math.random() * 500,
-                y: Math.random() * 500,
-            },
-            data: {
-                label: formData.skillName,
-                description: formData.description,
-                category: formData.category,
-                handleSkillNodeClick: handleSkillNodeClick,
-                selected: false,
-            },
-        };
-
-        reactFlowInstance.addNodes(newNode);
-
-        if (formData.prerequisite && formData.prerequisite !== "") {
-            const newEdge = {
-                id: `edge-${edges.length + 1}`,
-                source: formData.prerequisite,
-                target: id,
-            };
-            reactFlowInstance.addEdges(newEdge);
-        }
-
-        // Update lock states after adding new node and edge
-        setTimeout(() => updateNodesWithLockState(), 50);
+    const newNode = {
+      id,
+      type: "skillNode",
+      position: {
+        x: Math.random() * 500,
+        y: Math.random() * 500,
+      },
+      data: {
+        label: formData.skillName,
+        description: formData.description,
+        category: formData.category,
+        handleSkillNodeClick: handleSkillNodeClick,
+        selected: false,
+      },
     };
 
-    const nodeTypes = {
-        skillNode: SkillNode,
-        startingNode: StartingNode,
-    };
+    setNodes([...nodes, newNode]);
 
-    return (
-        <ReactFlow
-            defaultNodes={initialNodes}
-            defaultEdges={initialEdges}
-            nodeTypes={nodeTypes}
-            fitView
-        >
-            <Panel position="top-left">
-                <div className="panel-content">
-                    <h2>Interactive Skill Tree Builder</h2>
-                </div>
-            </Panel>
-            <Panel position="bottom-right">
-                <button onClick={handleAddSkillClick}>Add New Skill</button>
-            </Panel>
-            <Background bgColor="#B8CEFF" />
-            <Controls position="top-right" />
+    if (formData.prerequisite && formData.prerequisite !== "") {
+      const newEdge = {
+        id: `edge-${edges.length + 1}`,
+        source: formData.prerequisite,
+        target: id,
+      };
+      setEdges([...edges, newEdge]);
+    }
+  };
 
-            <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSubmit={handleAddSkill}
-                existingNodes={reactFlowInstance.getNodes()}
-            />
-        </ReactFlow>
+  const onNodesChange = useCallback(
+    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    [setNodes],
+  );
+
+  const onEdgesChange = useCallback(
+    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
+    [setEdges],
+  );
+
+  const nodeTypes = {
+    startingNode: StartingNode,
+    skillNode: SkillNode,
+  };
+
+  useEffect(() => {
+    const { nodes: loadedNodes, edges: loadedEdges } = getLocalStorageSkillTree(
+      handleSkillNodeClick,
+      [],
     );
+
+    // Update loaded nodes with current handleSkillNodeClick function
+    const updatedNodes = loadedNodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        handleSkillNodeClick:
+          node.type === "skillNode"
+            ? handleSkillNodeClick
+            : node.data.handleSkillNodeClick,
+      },
+    }));
+
+    // Extract selected node IDs from loaded nodes and update selectedNodes state
+    const selectedNodeIds = updatedNodes
+      .filter((node) => node.data.selected === true)
+      .map((node) => node.id);
+
+    setNodes(updatedNodes);
+    setEdges(loadedEdges);
+    setSelectedNodes(selectedNodeIds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      nodeTypes={nodeTypes}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      fitView
+    >
+      <Panel position="top-left">
+        <div className="panel-content">
+          <h2>Interactive Skill Tree Builder</h2>
+        </div>
+      </Panel>
+      <Panel position="bottom-right">
+        <button onClick={handleResetInitialSkills}>Reset Initial Skills</button>
+        <button onClick={handleAddSkillClick}>Add New Skill</button>
+      </Panel>
+      <Background bgColor="#B8CEFF" />
+      <Controls position="top-right" />
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAddSkill}
+        existingNodes={nodes}
+      />
+    </ReactFlow>
+  );
 }
 
 export default function App() {
-    return (
-        <div className="app-container">
-            <ReactFlowProvider>
-                <FlowContent />
-            </ReactFlowProvider>
-        </div>
-    );
+  return (
+    <div className="app-container">
+      <ReactFlowProvider>
+        <FlowContent />
+      </ReactFlowProvider>
+    </div>
+  );
 }
 
-// local storage saving/loading
 // tests
 // readme
 // linting
