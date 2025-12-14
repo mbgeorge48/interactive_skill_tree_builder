@@ -10,6 +10,7 @@ export const updateNodeSelection = (nodeId, selectedNodes) => {
 };
 
 export const updateNodeVisualState = (nodeId, nodes, newSelectedState) => {
+  // Updates a nodes data with the new value of `selected`
   return nodes.map((node) => {
     if (node.id === nodeId) {
       return {

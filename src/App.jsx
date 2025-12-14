@@ -32,9 +32,7 @@ function FlowContent() {
   const [edges, setEdges] = useState([]);
 
   const canNodeBeSelected = useCallback((nodeId, selectedNodes, edges) => {
-    if (nodeId === "node") return true;
-
-    // Find edges that target this node (prerequisites)
+    // Find edges that target this node (prerequisites), handles mutliple prerequisites however the code to add nodes doesn't allow this yet
     const prerequisiteEdges = edges.filter((edge) => edge.target === nodeId);
 
     if (prerequisiteEdges.length === 0) return true;
@@ -46,6 +44,7 @@ function FlowContent() {
 
   const handleSkillNodeClick = useCallback(
     (nodeId) => {
+      // This is a little complex because we're managing lots of state in a single callback
       setSelectedNodes((currentSelected) => {
         setNodes((currentNodes) => {
           setEdges((currentEdges) => {
@@ -78,8 +77,8 @@ function FlowContent() {
     [canNodeBeSelected],
   );
 
-  // Update lock states whenever selectedNodes changes
   useEffect(() => {
+    // Update lock states whenever selectedNodes changes
     setNodes((currentNodes) => {
       if (currentNodes.length === 0) return currentNodes;
 
@@ -94,8 +93,8 @@ function FlowContent() {
     });
   }, [selectedNodes, edges, canNodeBeSelected]);
 
-  // Save to localStorage when nodes, edges, or selectedNodes change
   useEffect(() => {
+    // Save to localStorage when nodes, edges, or selectedNodes change
     if (nodes.length > 0) {
       const timeoutId = setTimeout(() => {
         setLocalStorageSkillTree(nodes, edges, selectedNodes);
@@ -113,10 +112,10 @@ function FlowContent() {
     setEdges(newEdges);
     setSelectedNodes([]); // Clear selected nodes when resetting
   }, [handleSkillNodeClick]);
+
   const handleAddSkillClick = useCallback(() => {
     setIsModalOpen(true);
   }, []);
-
   const handleAddSkill = (formData) => {
     const id = `node-${nodes.length + 1}`;
 
@@ -135,7 +134,6 @@ function FlowContent() {
         selected: false,
       },
     };
-
     setNodes([...nodes, newNode]);
 
     if (formData.prerequisite && formData.prerequisite !== "") {
@@ -207,8 +205,17 @@ function FlowContent() {
         </div>
       </Panel>
       <Panel position="bottom-right">
-        <button onClick={handleResetInitialSkills}>Reset Initial Skills</button>
-        <button onClick={handleAddSkillClick}>Add New Skill</button>
+        <div className="panel-content">
+          <button
+            className="btn btn-primary"
+            onClick={handleResetInitialSkills}
+          >
+            Reset Initial Skills
+          </button>
+          <button className="btn btn-secondary" onClick={handleAddSkillClick}>
+            Add New Skill
+          </button>
+        </div>
       </Panel>
       <Background bgColor="#B8CEFF" />
       <Controls position="top-right" />
@@ -235,4 +242,3 @@ export default function App() {
 
 // tests
 // readme
-// linting
