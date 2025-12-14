@@ -239,6 +239,3 @@ export default function App() {
     </div>
   );
 }
-
-// tests
-// readme

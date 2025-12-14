@@ -8,12 +8,36 @@ Follow the instuctions to install bun on your machine
 - https://bun.com/
   - `curl -fsSL https://bun.sh/install | bash`
 
+Ensure you have the correct node version installed, this project was built on `22.12`
+If you have NVM setup run the following steps (https://github.com/nvm-sh/nvm)
+
+```sh
+nvm install
+nvm use
+```
+
+Then the following commands will install and run the app locally
+
 ```sh
 bun install
 bun run dev
 ```
 
 Follow terminal instuctions to the URL (usually http://localhost:5173/)
+
+### Linting and Testing
+
+To run the tests
+
+```sh
+bun test
+```
+
+To run the linter
+
+```sh
+bun lint
+```
 
 ## Requirements
 
@@ -29,7 +53,13 @@ Follow terminal instuctions to the URL (usually http://localhost:5173/)
 - [x] Unit Tests
   - Added tests for the utils files
   - Added tests for the components
-  - Added tests for the core App.jsx
+
+Extensions
+
+- [x] Prevent cycles:
+  - These are prevented via the way I chose to implement the prerequisites, prerequisites are only able to be set when creating a new skill
+- [] Search and Filter:
+  - This sounded interesting however I ran out of time before I got onto working on this
 
 ## AI Disclosure
 
@@ -38,3 +68,4 @@ Copliot was used during the work on this task. It was mainly used for the follow
 - Helping to explain parts of the React Flow library when working with custom Node and Edge flows and logic
 - Generating CSS styles
 - Create the default skill labels/descriptions
+- Setting up the unit testing using Vitest
