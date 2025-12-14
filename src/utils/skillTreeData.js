@@ -121,16 +121,26 @@ export const getLocalStorageSkillTree = (
   let parsedEdges = defaultEdges;
 
   if (storedNodes && storedNodes !== "null") {
-    const parsed = JSON.parse(storedNodes);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      parsedNodes = parsed;
+    try {
+      const parsed = JSON.parse(storedNodes);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        parsedNodes = parsed;
+      }
+    } catch (error) {
+      console.warn("Failed to parse stored nodes from localStorage:", error);
+      // parsedNodes remains as defaultNodes
     }
   }
 
   if (storedEdges && storedEdges !== "null") {
-    const parsed = JSON.parse(storedEdges);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      parsedEdges = parsed;
+    try {
+      const parsed = JSON.parse(storedEdges);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        parsedEdges = parsed;
+      }
+    } catch (error) {
+      console.warn("Failed to parse stored edges from localStorage:", error);
+      // parsedEdges remains as defaultEdges
     }
   }
 
