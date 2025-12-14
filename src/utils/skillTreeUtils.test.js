@@ -59,6 +59,28 @@ describe("updateNodeSelection", () => {
     const result2 = updateNodeSelection("node-2", result1);
     expect(result2).toEqual(["node-1"]);
   });
+
+  it("should cascade deselection when node is deselected", () => {
+    const edges = [
+      { source: "A", target: "B" },
+      { source: "B", target: "C" },
+    ];
+    const selectedNodes = ["A", "B", "C"];
+    const result = updateNodeSelection("A", selectedNodes, edges);
+    // Deselecting A should also deselect B and C
+    expect(result).toEqual([]);
+  });
+
+  it("should cascade deselection for middle node", () => {
+    const edges = [
+      { source: "A", target: "B" },
+      { source: "B", target: "C" },
+    ];
+    const selectedNodes = ["A", "B", "C"];
+    const result = updateNodeSelection("B", selectedNodes, edges);
+    // Deselecting B should deselect C but leave A
+    expect(result).toEqual(["A"]);
+  });
 });
 
 describe("updateNodeVisualState", () => {

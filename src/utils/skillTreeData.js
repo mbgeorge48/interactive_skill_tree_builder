@@ -87,8 +87,6 @@ export const generateInitialSkillTree = (
 };
 
 export const setLocalStorageSkillTree = (nodes, edges, selectedNodes = []) => {
-  console.log("Saving skill tree to localStorage...", nodes);
-
   // Ensure nodes have current selected state before saving
   const nodesWithCurrentSelection = nodes.map((node) => ({
     ...node,
@@ -103,49 +101,44 @@ export const setLocalStorageSkillTree = (nodes, edges, selectedNodes = []) => {
     JSON.stringify(nodesWithCurrentSelection),
   );
   localStorage.setItem("skillTreeEdges", JSON.stringify(edges));
+  localStorage.setItem("skillTreeSelectedNodes", JSON.stringify(selectedNodes));
 };
+
 export const getLocalStorageSkillTree = (
   handleSkillNodeClick,
   selectedNodes,
 ) => {
   const storedNodes = localStorage.getItem("skillTreeNodes");
   const storedEdges = localStorage.getItem("skillTreeEdges");
+  const storedSelectedNodes = localStorage.getItem("skillTreeSelectedNodes");
 
   const { nodes: defaultNodes, edges: defaultEdges } = generateInitialSkillTree(
     handleSkillNodeClick,
     selectedNodes,
   );
 
-  // Use stored data if it exists, is valid, and is not empty, otherwise use defaults
-  let parsedNodes = defaultNodes;
-  let parsedEdges = defaultEdges;
+  // Use stored data if it exists, otherwise use defaults
+  let localStorageNodes = defaultNodes;
+  let localStorageEdges = defaultEdges;
+  let localStorageSelectedNodes = [];
 
-  if (storedNodes && storedNodes !== "null") {
-    try {
-      const parsed = JSON.parse(storedNodes);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        parsedNodes = parsed;
-      }
-    } catch (error) {
-      console.warn("Failed to parse stored nodes from localStorage:", error);
-      // parsedNodes remains as defaultNodes
+  try {
+    if (storedSelectedNodes) {
+      localStorageSelectedNodes = JSON.parse(storedSelectedNodes);
     }
-  }
-
-  if (storedEdges && storedEdges !== "null") {
-    try {
-      const parsed = JSON.parse(storedEdges);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        parsedEdges = parsed;
-      }
-    } catch (error) {
-      console.warn("Failed to parse stored edges from localStorage:", error);
-      // parsedEdges remains as defaultEdges
+    if (storedEdges) {
+      localStorageEdges = JSON.parse(storedEdges);
     }
+    if (storedNodes) {
+      localStorageNodes = JSON.parse(storedNodes);
+    }
+  } catch (error) {
+    console.warn("Error loading from localStorage:", error);
   }
 
   return {
-    nodes: parsedNodes,
-    edges: parsedEdges,
+    nodes: localStorageNodes,
+    edges: localStorageEdges,
+    selectedNodes: localStorageSelectedNodes,
   };
 };

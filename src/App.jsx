@@ -71,10 +71,10 @@ function FlowContent() {
           return currentNodes;
         });
 
-        return updateNodeSelection(nodeId, currentSelected);
+        return updateNodeSelection(nodeId, currentSelected, edges);
       });
     },
-    [canNodeBeSelected],
+    [canNodeBeSelected, edges],
   );
 
   useEffect(() => {
@@ -91,6 +91,17 @@ function FlowContent() {
         },
       }));
     });
+
+    // Validate that all currently selected nodes are still valid to prevent invalid states
+    const validSelectedNodes = [];
+    for (const nodeId of selectedNodes) {
+      if (canNodeBeSelected(nodeId, validSelectedNodes, edges)) {
+        validSelectedNodes.push(nodeId);
+      }
+    }
+    if (validSelectedNodes.length !== selectedNodes.length) {
+      setSelectedNodes(validSelectedNodes);
+    }
   }, [selectedNodes, edges, canNodeBeSelected]);
 
   useEffect(() => {
@@ -162,12 +173,21 @@ function FlowContent() {
   };
 
   useEffect(() => {
-    const { nodes: loadedNodes, edges: loadedEdges } = getLocalStorageSkillTree(
-      handleSkillNodeClick,
-      [],
-    );
+    const {
+      nodes: loadedNodes,
+      edges: loadedEdges,
+      selectedNodes: loadedSelectedNodes,
+    } = getLocalStorageSkillTree(handleSkillNodeClick, []);
 
-    // Update loaded nodes with current handleSkillNodeClick function
+    // Validate which nodes from localStorage can actually be selected as a fail safe
+    const validSelectedNodes = [];
+    for (const nodeId of loadedSelectedNodes) {
+      if (canNodeBeSelected(nodeId, validSelectedNodes, loadedEdges)) {
+        validSelectedNodes.push(nodeId);
+      }
+    }
+
+    setSelectedNodes(validSelectedNodes);
     const updatedNodes = loadedNodes.map((node) => ({
       ...node,
       data: {
@@ -176,17 +196,12 @@ function FlowContent() {
           node.type === "skillNode"
             ? handleSkillNodeClick
             : node.data.handleSkillNodeClick,
+        selected: validSelectedNodes.includes(node.id),
       },
     }));
 
-    // Extract selected node IDs from loaded nodes and update selectedNodes state
-    const selectedNodeIds = updatedNodes
-      .filter((node) => node.data.selected === true)
-      .map((node) => node.id);
-
     setNodes(updatedNodes);
     setEdges(loadedEdges);
-    setSelectedNodes(selectedNodeIds);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

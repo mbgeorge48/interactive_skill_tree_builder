@@ -155,10 +155,18 @@ describe("skillTreeData", () => {
 
       setLocalStorageSkillTree(nodes, edges, selectedNodes);
 
-      expect(localStorage.setItem).toHaveBeenCalledTimes(2);
+      expect(localStorage.setItem).toHaveBeenCalledTimes(3);
+      expect(localStorage.setItem).toHaveBeenCalledWith(
+        "skillTreeNodes",
+        expect.any(String),
+      );
       expect(localStorage.setItem).toHaveBeenCalledWith(
         "skillTreeEdges",
         JSON.stringify(edges),
+      );
+      expect(localStorage.setItem).toHaveBeenCalledWith(
+        "skillTreeSelectedNodes",
+        JSON.stringify(selectedNodes),
       );
     });
 
