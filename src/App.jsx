@@ -45,6 +45,7 @@ function FlowContent() {
   const handleSkillNodeClick = useCallback(
     (nodeId) => {
       // This is a little complex because we're managing lots of state in a single callback
+      // The reason for the functional updates is to ensure we have the latest state values when updating
       setSelectedNodes((currentSelected) => {
         setNodes((currentNodes) => {
           setEdges((currentEdges) => {
